@@ -1,0 +1,68 @@
+.hfull {
+  height: 100vh;
+  background: #dce6f8;
+}
+
+.none {
+  display: none;
+}
+
+.btn {
+  cursor: pointer;
+  background-color: #4f6dff;
+  padding: 6px 30px;
+  margin: 9px;
+  text-align: center;
+}
+
+#texto-modal .none {
+  display: block !important;
+  font-size: 18px;
+}
+
+h1.header {
+  position: relative;
+  text-shadow: 2px 4px 6px #1027ab;
+  z-index: 1;
+}
+h3 {
+  font-size: 19px;
+  font-weight: 400;
+}
+.student {
+  position: absolute;
+  top: -75px;
+  width: 500px;
+  left: -30px;
+  z-index: 0;
+}
+
+.modal-header {
+  padding: 15px;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-header:before,
+.modal-header:after {
+  display: none;
+}
+
+.modal-dialog-scrollable .modal-body {
+  background: #f7faff;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+input {
+  font-family: "Roboto", sans-serif;
+  outline: 0;
+  background: #f2f2f2;
+  width: 100%;
+  border: 0;
+  margin: 0 0 15px;
+  padding: 15px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
