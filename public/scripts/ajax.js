@@ -1,3 +1,5 @@
+var context = [{"role": "system", "content": "You are a small humanoid robot called Nao."}]
+
 function removeHASH() {
   if (window.location.href.indexOf('#') != -1)
     return window.location.href.substring(0, window.location.href.indexOf('#'));
@@ -16,7 +18,7 @@ function sendWatson(msg) {
       url: removeHASH() + 'watson/send',
       success: (data) => {
         console.log(data);
-        addToChatWatson(data[0]);
+        addToChat('Watson', data[0]);
         if (robot != null) {
           robot.response = data[0];
         } else {
@@ -26,13 +28,39 @@ function sendWatson(msg) {
   })
 }
 
-function getSTT(blob) {
-  let fd = new FormData();
-  fd.append('wav', blob);
+function sendGPT(msg) {
+  var msgs = {};
+  msgs.content = msg;
+  msgs.role = 'user';
+  context.push(msgs);
+  $.ajax({
+      type: 'POST',
+      data: JSON.stringify(context),
+      contentType: 'application/json',
+      url: removeHASH() + 'chatgpt/send',
+      success: (data) => {
+        console.log(data);
+        addToChat('ChatGPT', data);
+        let newRes = {}
+        newRes.content = data;
+        newRes.role = 'assistant';
+        context.push(newRes);
+        if (robot != null) {
+          robot.response = data;
+        } else {
+          getTTS(data);
+        }
+      }
+  })
+}
+
+function getSTTNaoVer(wav) {
+  data = {}
+  data.filenameAudio = wav
   $.ajax({
       type: 'POST',
       url: 'watson/stt',
-      data: fd,
+      data: JSON.stringify(data),
       contentType: false,
       processData: false,
       success: (data) => {
@@ -55,5 +83,39 @@ function getTTS(text) {
       success: (data) => {
         new Audio("../tts/audio.wav").play();
       }
+  })
+}
+
+function getSTT(blob) {
+  let fd = new FormData();
+  fd.append('wav', blob);
+  $.ajax({
+      type: 'POST',
+      url: 'watson/stt/ws',
+      data: fd,
+      contentType: false,
+      processData: false,
+      success: (data) => {
+        console.log(data);
+        addToChatSelf(data);
+      }
+  })
+}
+
+function importAudio() {
+  data = {}
+  data.filenameAudio = '/home/nao/recordings/microphones/audio.wav'
+  data.endDirAudio = './public/raw_audio/';
+  data.ip = robot.iAddr
+  data.robotPass = 'nao'
+  $.ajax({
+    type: 'POST',
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    url: removeHASH() + 'ssh/copy_recordings_audio',
+    success: (data) => {
+      console.log(data);
+      getSTTNaoVer(data)
+    }
   })
 }

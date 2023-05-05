@@ -1,12 +1,30 @@
 require('dotenv').config();
 var express = require('express');
 var router = express.Router();
+var Client = require('ssh2-sftp-client');
 const fs = require('fs');
 const multer = require('multer');
 const AssistantV1 = require('ibm-watson/assistant/v1');
 const TextToSpeech = require('ibm-watson/text-to-speech/v1');
 const SpeechToText = require('ibm-watson/speech-to-text/v1');
 const { IamAuthenticator }  = require('ibm-watson/auth');
+const axios = require('axios');
+
+async function messageAsyncGPT(conversation){
+  var data = {
+    'model':'gpt-3.5-turbo',
+    'messages': conversation,
+  };
+
+  var options = {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + fs.readFileSync('api.key'), 'content-type': 'application/json' },
+    data: JSON.stringify(data),
+    url: 'https://api.openai.com/v1/chat/completions',
+  };
+
+  return axios(options);
+}
 
 const upload = multer({storage: multer.diskStorage({
     destination: function (req, file, callback) { callback(null, './uploads');},
@@ -104,7 +122,7 @@ router.post('/watson/tts', function(req, res){
     });
 });
 
-router.post('/watson/stt', upload.single('wav'), function(req, res){
+router.post('/watson/stt/ws', upload.single('wav'), function(req, res){
   // Create the stream.
   const recognizeStream = stt.recognizeUsingWebSocket({
     content_type: 'audio/wav',
@@ -121,6 +139,98 @@ router.post('/watson/stt', upload.single('wav'), function(req, res){
 
   // Pipe in the audio.
   fs.createReadStream('./uploads/' + req.file.filename).pipe(recognizeStream);
+});
+
+//export this router to use in our index.js
+module.exports = router;
+
+router.post('/watson/stt', function(req, res){
+  // Specify the audio file path for conversion
+  const audioFile = './public/raw_audio/audio.wav';
+
+  // Create a ReadableStream from the audio file
+  const audioStream = fs.createReadStream(audioFile);
+
+  // Configure the parameters for the speech recognition
+  const recognizeParams = {
+    audio: audioStream,
+    contentType: 'audio/wav',
+    model: 'en-US_BroadbandModel', // Change the model as per your requirements
+  };
+
+  stt.recognize(recognizeParams)
+  .then(response => {
+    const transcription = response.result.results.map(result => result.alternatives[0].transcript).join(' ');
+    console.log('Transcription:', transcription);
+    res.send(transcription)
+  })
+  .catch(err => {
+    console.log('Error:', err);
+  });
+});
+
+router.post('/chatgpt/send', function(req, res){
+  console.log(req.body);
+  messageAsyncGPT(req.body)
+    .then( response => {
+      
+      console.log(response.data, '\n--------');
+
+      return response.data.choices[0].message.content;
+    }).then(data => {
+      res.send(data);
+    });
+});
+
+router.post('/ssh/copy_recordings_audio', function (req, res, next) {
+  try {
+    let responseSent = false; // Flag to track if response has been sent
+
+    fs.unlinkSync(req.body.endDirAudio + 'audio.wav');
+
+    fs.watchFile(req.body.endDirAudio, function () {
+      if (!responseSent) {
+        fs.unwatchFile(req.body.endDirAudio);
+        responseSent = true; // Set the flag to true after sending the response
+        res.send(req.body.endDirAudio + 'audio.wav');
+      }
+    });
+
+    console.log(req.body)
+
+    let sftp = new Client();
+    sftp.connect({
+        host: req.body.ip,
+        port: 22,
+        user: 'nao',
+        tryKeyboard: true,
+      })
+      .then(() => {
+        return sftp.fastGet(req.body.filenameAudio, req.body.endDirAudio + 'audio.wav');
+      })
+      .then((data) => {
+        console.log(data);
+        sftp.end();
+      })
+      .catch((err) => {
+        console.log(err, 'catch error');
+      });
+    sftp
+      .on('keyboard-interactive', function (name, instructions, lang, prompts, finish) {
+        console.log('Connection :: keyboard');
+        finish([req.body.robotPass]);
+      });
+
+    sftp
+      .on('error', function (e) {
+        console.log(e);
+        res.status(111);
+        res.send(e);
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 //export this router to use in our index.js

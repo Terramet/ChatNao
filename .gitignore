@@ -107,5 +107,7 @@ dist
 uploads/*
 public/tts
 
-cert.pem
-key.pem
+server.cert
+server.key
+
+api.key

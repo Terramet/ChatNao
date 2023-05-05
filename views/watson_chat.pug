@@ -5,6 +5,7 @@ html
     link(rel='stylesheet', href='/stylesheets/modal.css', type='text/css')
     script(src='/scripts/main.js')
     script(src='/scripts/ajax.js')
+    script(src='/scripts/nao-util.js')
     script(src='/libs/qi/2/qi.js')
     script(src='https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js')
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js')
@@ -16,12 +17,12 @@ html
     .menu
       a.back(href='#')
         i.fa.fa-angle-left
-        img(src='https://upload.wikimedia.org/wikipedia/en/thumb/0/00/IBM_Watson_Logo_2017.png/220px-IBM_Watson_Logo_2017.png', draggable='false')
+        img(src='https://static.vecteezy.com/system/resources/previews/021/608/790/original/chatgpt-logo-chat-gpt-icon-on-black-background-free-vector.jpg', draggable='false')
 
-      .name Corona chat
+      .name NaoGPT
       .members
         b You
-        | Watson
+        |        ChatGPT
       button#texto.btn(style='float: right; clear: right; color: #fff', type='button', data-text='connect', data-toggle='modal', data-target='#modalone') Connect
     ol.chat#msgs
 
