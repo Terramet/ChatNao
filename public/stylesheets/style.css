@@ -411,7 +411,6 @@ textarea:focus {
     outline: none;
     z-index: 100;
     cursor: pointer;
-    background-image: url(http://www.myiconfinder.com/uploads/iconsets/256-256-5149d17faeeffb6ebf2ff0ea5a6a5aaa-message.png);
     background-repeat: no-repeat;
     background-size: 34px 34px;
     background-position: 45% 9px;

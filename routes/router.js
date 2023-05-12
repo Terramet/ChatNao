@@ -31,7 +31,7 @@ const upload = multer({storage: multer.diskStorage({
     filename: function (req, file, callback) { callback(null, Date.now() + '.' + file.fieldname);}})
 })
 
-var type = upload.single('wav');
+var type = upload.single('webm');
 
 const assistant = new AssistantV1({
   authenticator: new IamAuthenticator({ apikey: '5LEpOdMr0im7Lupso2GUTwHNmAveKOuoA6KV7a0HOaWv' }),
@@ -108,9 +108,9 @@ router.post('/watson/tts', function(req, res){
       return tts.repairWavHeaderStream(audio);
     })
     .then(repairedFile => {
-      let file_path = 'public/tts/audio.wav';
+      let file_path = 'public/tts/' + Date.now() + '.wav';
       fs.writeFileSync(file_path, repairedFile);
-      console.log('audio.wav written with a corrected wav header');
+      console.log(file_path + ' written with a corrected wav header');
       return file_path;
     })
     .then(file_path =>
@@ -122,19 +122,27 @@ router.post('/watson/tts', function(req, res){
     });
 });
 
-router.post('/watson/stt/ws', upload.single('wav'), function(req, res){
+router.post('/watson/stt/ws', upload.single('webm'), function(req, res){
+  var transcription = '';
   // Create the stream.
   const recognizeStream = stt.recognizeUsingWebSocket({
-    content_type: 'audio/wav',
-    interimResults: true
+    content_type: 'audio/webm',
+    interimResults: false
   });
 
   recognizeStream.on('data', function(chunk) {
     console.log(chunk.toString());
-    res.send(chunk.toString());
+    transcription += chunk.toString(); // Append the transcribed data
   });
+
+  recognizeStream.on('end', function() {
+    console.log('Streaming ended');
+    res.send(transcription); // Send the response once streaming is complete
+  });
+
   recognizeStream.on('error', function(e) {
     console.log(e);
+    res.status(500).send('Error occurred during speech-to-text processing');
   });
 
   // Pipe in the audio.

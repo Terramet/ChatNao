@@ -1,16 +1,22 @@
-var robot = null;
-var mediaStream = null;
-var recorder = null;
+// Declare variables
+var robot;
+var mediaStream;
+var recorder;
 var audioBuffer = [];
-var context = null;
-var rec = null;
+var context;
+var rec;
+var workletNode;
 
-function addToChatSelf(data=null) {
+// Function to add a message from the user to the chat interface
+function addToChatSelf(data = null) {
+  // Check if data is provided, otherwise get input from a text field
   if (data == null) {
     sendGPT(document.getElementById("textToSay").value);
   } else {
     sendGPT(data);
   }
+
+  // Create the elements for the message
   var ele = document.createElement("li");
   ele.classList.add("self");
 
@@ -31,15 +37,17 @@ function addToChatSelf(data=null) {
 
   time.innerHTML =+ d.getHours() + ":"  + d.getMinutes();
 
+  // Append the elements to the chat interface
   div.appendChild(pText);
   div.appendChild(time);
   ele.appendChild(div);
   var win = document.getElementById("msgs");
-
   win.appendChild(ele);
 }
 
+// Function to add a message from another user to the chat interface
 function addToChat(user, text) {
+  // Create the elements for the message
   var ele = document.createElement("li");
   ele.classList.add("other");
 
@@ -59,33 +67,51 @@ function addToChat(user, text) {
 
   time.innerHTML =+ d.getHours() + ":"  + d.getMinutes();
 
-
+  // Append the elements to the chat interface
   div.appendChild(divUser);
   div.appendChild(pText);
   div.appendChild(time);
   ele.appendChild(div);
   var win = document.getElementById("msgs");
-
   win.appendChild(ele);
 }
 
 function beginAudioStream() {
   document.getElementById('startRecord').classList.add('none');
   document.getElementById('stopRecord').classList.remove('none');
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-      .then((stream) => {
-        context = new AudioContext();
-        var source = context.createMediaStreamSource(stream);
-        rec = new Recorder(source);
-        rec.record();
-      });
+  //start recording using the audio recording API
+  audioRecorder.start()
+  .then(() => { //on success
+      console.log("Recording Audio...")    
+  })    
+  .catch(error => {
+    // Handle the error
+    console.log("Error occurred during audio recording:", error);
+  });
 }
 
 function endAudioStream() {
   document.getElementById('stopRecord').classList.add('none');
   document.getElementById('startRecord').classList.remove('none');
-  rec.stop()
-  var blob = rec.exportWAV(getSTT)
+    //stop the recording using the audio recording API
+    console.log("Stopping Audio Recording...")
+    audioRecorder.stop()
+    .then(audioAsblob => { //stopping makes promise resolves to the blob file of the recorded audio
+        console.log("stopped with audio Blob:", audioAsblob);
+
+        getSTT(audioAsblob);
+    })
+    .catch(error => {
+        //Error handling structure
+        switch (error.name) {
+            case 'InvalidStateError': //error from the MediaRecorder.stop
+                console.log("An InvalidStateError has occured.");
+                break;
+            default:
+                console.log("An error occured with the error name " + error.name);
+        };
+
+    });
 }
 
 function onError(e) {

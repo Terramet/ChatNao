@@ -65,7 +65,9 @@ function getSTTNaoVer(wav) {
       processData: false,
       success: (data) => {
         console.log(data);
-        addToChatSelf(data);
+        if (data != '') {
+          addToChatSelf(data);
+        }
       }
   })
 }
@@ -81,14 +83,21 @@ function getTTS(text) {
       contentType: 'application/json',
       url: removeHASH() + 'watson/tts',
       success: (data) => {
-        new Audio("../tts/audio.wav").play();
-      }
+        let audio = new Audio(data);
+        audio.addEventListener('ended', function() {
+          console.log('Audio playback finished');
+          if (recorder && should_be_recording) {
+            recorder.startRecording();
+          }
+        });
+        audio.play();
+    }
   })
 }
 
 function getSTT(blob) {
   let fd = new FormData();
-  fd.append('wav', blob);
+  fd.append('webm', blob);
   $.ajax({
       type: 'POST',
       url: 'watson/stt/ws',
@@ -97,7 +106,9 @@ function getSTT(blob) {
       processData: false,
       success: (data) => {
         console.log(data);
-        addToChatSelf(data);
+        if (data != '') {
+          addToChatSelf(data);
+        }
       }
   })
 }
