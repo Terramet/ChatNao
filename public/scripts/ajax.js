@@ -1,4 +1,6 @@
-var context = [{"role": "system", "content": "You are a small humanoid robot called Nao."}]
+var context = [{"role": "system", "content": "You are a humanoid robot called Pepper. You are not an AI language model"}]
+var max_messages = 10;  // change this to adjust the number of messages to keep
+var num_messages = 0;
 
 function removeHASH() {
   if (window.location.href.indexOf('#') != -1)
@@ -20,7 +22,7 @@ function sendWatson(msg) {
         console.log(data);
         addToChat('Watson', data[0]);
         if (robot != null) {
-          robot.response = data[0];
+          robot.say(data[0]);
         } else {
           getTTS(data[0]);
         }
@@ -28,29 +30,61 @@ function sendWatson(msg) {
   })
 }
 
+function restartRecording() {
+  console.log('restarting recording called.')
+   if (recorder && should_be_recording) { 
+    recorder.startRecording(); 
+  } 
+}
+
 function sendGPT(msg) {
   var msgs = {};
   msgs.content = msg;
   msgs.role = 'user';
   context.push(msgs);
+
+  // Update message count, ignoring 'system' role
+  if (msgs.role !== 'system') num_messages++;
+
   $.ajax({
-      type: 'POST',
-      data: JSON.stringify(context),
-      contentType: 'application/json',
-      url: removeHASH() + 'chatgpt/send',
-      success: (data) => {
-        console.log(data);
-        addToChat('ChatGPT', data);
-        let newRes = {}
-        newRes.content = data;
-        newRes.role = 'assistant';
-        context.push(newRes);
-        if (robot != null) {
-          robot.response = data;
-        } else {
-          getTTS(data);
+    type: 'POST',
+    data: JSON.stringify(context),
+    contentType: 'application/json',
+    url: removeHASH() + 'chatgpt/send',
+    success: (data) => {
+      console.log(data);
+      manageMessage('ChatGPT', data)
+      let newRes = {}
+      newRes.content = data;
+      newRes.role = 'assistant';
+      context.push(newRes);
+
+      // Update message count, ignoring 'system' role
+      if (newRes.role !== 'system') num_messages++;
+
+      // If the message count exceeds the limit
+      if (num_messages > max_messages) {
+        // Keep removing the first 'user' or 'assistant' message until the count is within limit
+        while (num_messages > max_messages) {
+          if (context[0].role !== 'system') {
+            context.shift();  // remove the oldest message
+            num_messages--;
+          } else {
+            // If the oldest message is a 'system' message, remove the next one
+            if (context[1].role !== 'system') {
+              context.splice(1, 1);  // remove the second oldest message
+              num_messages--;
+            }
+          }
         }
       }
+
+      if (robot != null) {
+        robot.say(data, restartRecording);
+      } else {
+        getTTS(data, restartRecording);
+      }
+    }
   })
 }
 
@@ -72,7 +106,7 @@ function getSTTNaoVer(wav) {
   })
 }
 
-function getTTS(text) {
+function getTTS(text, callback) {
   var chat_response = {};
   chat_response.text = text;
   chat_response.voice = 'en-US_AllisonVoice';
@@ -83,14 +117,8 @@ function getTTS(text) {
       contentType: 'application/json',
       url: removeHASH() + 'watson/tts',
       success: (data) => {
-        let audio = new Audio(data);
-        audio.addEventListener('ended', function() {
-          console.log('Audio playback finished');
-          if (recorder && should_be_recording) {
-            recorder.startRecording();
-          }
-        });
-        audio.play();
+        console.log(data)
+        playFile(data, callback)
     }
   })
 }
@@ -108,6 +136,7 @@ function getSTT(blob) {
         console.log(data);
         if (data != '') {
           addToChatSelf(data);
+          sendGPT(data);
         }
       }
   })
@@ -117,7 +146,7 @@ function importAudio() {
   data = {}
   data.filenameAudio = '/home/nao/recordings/microphones/audio.wav'
   data.endDirAudio = './public/raw_audio/';
-  data.ip = robot.iAddr
+  data.ip = robot.ip
   data.robotPass = 'nao'
   $.ajax({
     type: 'POST',
@@ -127,6 +156,23 @@ function importAudio() {
     success: (data) => {
       console.log(data);
       getSTTNaoVer(data)
+    }
+  })
+}
+
+function playFile(filename, callback) {
+  $.ajax({
+    type: 'GET',
+    contentType: 'application/json',
+    url: removeHASH() + 'files/' + filename,
+    success: (data) => {
+      console.log(data);
+      let audio = new Audio(data);
+      audio.addEventListener('ended', function() {
+        console.log('Audio playback finished');
+        callback()
+      });
+      audio.play();
     }
   })
 }

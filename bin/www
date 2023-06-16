@@ -9,8 +9,10 @@ var debug = require('debug')('chatnao:server');
 var https = require('https');
 var http = require('http');
 var fs = require('fs');
+let socketapi = require("../routes/socketapi");
+
 var privateKey  = fs.readFileSync('server.key', 'utf8');
-var certificate = fs.readFileSync('server.cert', 'utf8');
+var certificate = fs.readFileSync('server.crt', 'utf8');
 
 var credentials = {key: privateKey, cert: certificate};
 
@@ -26,6 +28,7 @@ app.set('port', port);
  */
 
 var httpServer = http.createServer(app);
+socketapi.io.attach(httpServer);
 var httpsServer = https.createServer(credentials, app);
 
 /**
@@ -105,3 +108,5 @@ function onListeningHttps() {
     : 'port ' + addr.port;
     console.log('Listening on ' + bind);
 }
+
+module.exports = httpServer;

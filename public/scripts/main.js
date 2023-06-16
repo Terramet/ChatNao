@@ -7,42 +7,30 @@ var context;
 var rec;
 var workletNode;
 
-// Function to add a message from the user to the chat interface
-function addToChatSelf(data = null) {
-  // Check if data is provided, otherwise get input from a text field
-  if (data == null) {
-    sendGPT(document.getElementById("textToSay").value);
-  } else {
-    sendGPT(data);
-  }
+function addToChatSelf(data) {
+    // Create the elements for the message
+    var ele = document.createElement("li");
+    ele.classList.add("self");
+  
+    var div = document.createElement("div");
+    div.classList.add("msg");
+  
+    var pText = document.createElement("p");
 
-  // Create the elements for the message
-  var ele = document.createElement("li");
-  ele.classList.add("self");
-
-  var div = document.createElement("div");
-  div.classList.add("msg");
-
-  var pText = document.createElement("p");
-  if (data == null) {
-    pText.innerHTML += document.getElementById("textToSay").value;
-  } else {
     pText.innerHTML += data;
-  }
-  document.getElementById("textToSay").value = '';
 
-  var time = document.createElement("time");
-  var d = new Date();
-  var n = d.getTime();
-
-  time.innerHTML =+ d.getHours() + ":"  + d.getMinutes();
-
-  // Append the elements to the chat interface
-  div.appendChild(pText);
-  div.appendChild(time);
-  ele.appendChild(div);
-  var win = document.getElementById("msgs");
-  win.appendChild(ele);
+    var time = document.createElement("time");
+    var d = new Date();
+    var n = d.getTime();
+  
+    time.innerHTML =+ d.getHours() + ":"  + d.getMinutes();
+  
+    // Append the elements to the chat interface
+    div.appendChild(pText);
+    div.appendChild(time);
+    ele.appendChild(div);
+    var win = document.getElementById("msgs");
+    win.appendChild(ele);
 }
 
 // Function to add a message from another user to the chat interface
@@ -112,6 +100,35 @@ function endAudioStream() {
         };
 
     });
+}
+
+function connectNao() {
+  let host = document.getElementById('ip').value;
+  robot = new NaoPepperRobot(host)
+}
+
+function connectROS() {
+  let host = document.getElementById('ip').value;
+  let topic = document.getElementById('topic').value;
+  robot = new ROSBasedRobot(host, topic)
+}
+
+// Function to scroll to the bottom of the chat window
+function scrollToBottom() {
+  setTimeout(() => {
+    const chat = $('#msgs');
+    chat.animate({ scrollTop: chat.prop('scrollHeight')}, 500);
+  }, 100);
+}
+
+function manageMessage(user, data) {
+  if (user == 'self') {
+    addToChatSelf(data);
+  } else {
+    addToChat(user, data);
+  }
+  socketSend({'user': user, 'msg': data});
+  scrollToBottom();
 }
 
 function onError(e) {

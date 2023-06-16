@@ -95,6 +95,8 @@ html, body {
     padding: 0 0 50px 0;
     margin-top: 60px;
     margin-bottom: 15px;
+    overflow-y: scroll;
+    height: 90vh;
 }
 .chat li {
     padding: 0.5rem;

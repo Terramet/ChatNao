@@ -8,11 +8,13 @@ const AssistantV1 = require('ibm-watson/assistant/v1');
 const TextToSpeech = require('ibm-watson/text-to-speech/v1');
 const SpeechToText = require('ibm-watson/speech-to-text/v1');
 const { IamAuthenticator }  = require('ibm-watson/auth');
+const watsonKeys = require('../watson.json')
 const axios = require('axios');
+const socketapi = require('./socketapi')
 
 async function messageAsyncGPT(conversation){
   var data = {
-    'model':'gpt-3.5-turbo',
+    'model':'gpt-3.5-turbo-0613',
     'messages': conversation,
   };
 
@@ -34,18 +36,18 @@ const upload = multer({storage: multer.diskStorage({
 var type = upload.single('webm');
 
 const assistant = new AssistantV1({
-  authenticator: new IamAuthenticator({ apikey: '5LEpOdMr0im7Lupso2GUTwHNmAveKOuoA6KV7a0HOaWv' }),
+  authenticator: new IamAuthenticator({ apikey: watsonKeys.AssistantV1 }),
   version: '2018-09-20',
   url: 'https://api.eu-gb.assistant.watson.cloud.ibm.com'
 })
 
 const tts = new TextToSpeech({
-  authenticator: new IamAuthenticator({ apikey: 'eqAfaL95r7dBdEtSItI2-jBLxDYjykJR5nZAblwG0dQc' }),
+  authenticator: new IamAuthenticator({ apikey: watsonKeys.TextToSpeech }),
   url: 'https://api.eu-gb.text-to-speech.watson.cloud.ibm.com'
 })
 
 const stt = new SpeechToText({
-  authenticator: new IamAuthenticator({ apikey: '8xSMvG79LsyZCc62BS8wb7QR1iGbUJAedo9Dj6eZylCt' }),
+  authenticator: new IamAuthenticator({ apikey: watsonKeys.SpeechToText }),
   url: 'https://api.eu-gb.speech-to-text.watson.cloud.ibm.com',
   headers: {
     'X-Watson-Learning-Opt-Out': 'true'
@@ -73,8 +75,13 @@ const getMethods = (obj) => {
 }
 
 router.get('/', function(req, res){
-   res.render('watson_chat');
+   res.render('gpt_chat');
 });
+
+router.get('/monitor', function(req, res){
+  res.render('gpt_chat_monitor');
+});
+
 router.post('/', function(req, res){
    res.send('POST route on router.');
 });
@@ -124,6 +131,7 @@ router.post('/watson/tts', function(req, res){
 
 router.post('/watson/stt/ws', upload.single('webm'), function(req, res){
   var transcription = '';
+  console.log()
   // Create the stream.
   const recognizeStream = stt.recognizeUsingWebSocket({
     content_type: 'audio/webm',
@@ -239,6 +247,11 @@ router.post('/ssh/copy_recordings_audio', function (req, res, next) {
     console.error(error);
     res.status(500).send('Internal Server Error');
   }
+});
+
+router.get('/files/:filename', (req, res) => {
+  const filePath = path.join(__dirname, req.params.filename);
+  res.sendFile(filePath);
 });
 
 //export this router to use in our index.js

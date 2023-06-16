@@ -1,0 +1,108 @@
+doctype html
+html
+  head
+    link(rel='stylesheet', href='/stylesheets/style.css', type='text/css')
+    link(rel='stylesheet', href='/stylesheets/modal.css', type='text/css')
+    script(src='/scripts/ajax.js')
+    script(src='/scripts/robot.js')
+    script(src='/scripts/recorder-worklet.js')
+    script(src='/scripts/streamer-worker.js')
+    script(src='/socket.io/socket.io.js')
+    script.
+        var baseSocketIO = io('/sio');
+    script(src='/libs/qi/2/qi.js')
+    script(src='https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js')
+    script(src='https://cdn.webrtc-experiment.com/RecordRTC.js')
+    script(src='https://www.webrtc-experiment.com/hark.js')
+    script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/roslibjs/1.1.0/roslib.min.js')
+    script(src='/scripts/main.js')
+    script(src='/scripts/sockets.js')
+    link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body
+    .menu
+      a.back(href='#')
+        i.fa.fa-angle-left
+        img(src='https://static.vecteezy.com/system/resources/previews/021/608/790/original/chatgpt-logo-chat-gpt-icon-on-black-background-free-vector.jpg', draggable='false')
+
+      .name NaoGPT
+      .members
+        b You
+        |        ChatGPT
+      button#texto.btn(style='float: right; clear: right; color: #fff', type='button', data-text='connect', data-toggle='modal', data-target='#modalone') Connect
+    ol.chat#msgs
+
+    .typezone
+      form#chat
+        textarea(id='textToSay', type='text', placeholder='Say something')
+        input#chatInput.send(type='submit', value='', onclick="addToChatSelf(); return false;")
+      #startRecord.mic(onclick="startRecording()")
+      #stopRecord.micinvert.none(onclick="stopRecording()")
+
+    #modalone.modal.fade(tabindex='-1', role='dialog', aria-labelledby='onemodalTitle', aria-hidden='true')
+      .modal-dialog.modal-dialog-scrollable(role='document')
+        .modal-content
+          .modal-header
+            h3#onemodalTitle.modal-title
+              strong Connect to Nao
+            button.close(type='button', data-dismiss='modal', aria-label='Close')
+              span(aria-hidden='true', style='padding: 0 15px;font-size: 36px;') &times;
+          .modal-body
+            #texto-modal
+    #connect.none
+      .group
+        button#NaoPepperBTN.btn Nao/Pepper
+        button#ROSBasedBTN.btn ROS Based
+    #NaoPepper.none
+      .group
+        input#ip(type='text', required='', placeholder='Robot IP Address')
+      .modal-footer(style='padding: 5px;')
+            button.btn(style='color: #fff; background-color: #252C33;', type='button', data-dismiss='modal', onclick='connectNao()') Connect
+    #ROSBased.none
+      .group
+        input#ip(type='text', required='', placeholder='Robot IP Address')
+        input#topic(type='text', required='', placeholder='ROS Speech Synthesiser Topic')
+      .modal-footer(style='padding: 5px;')
+            button.btn(style='color: #fff; background-color: #252C33;', type='button', data-dismiss='modal', onclick='connectROS()') Connect
+
+  script.
+    $(function(){
+      $("#textToSay").keypress(function (e) {
+        if (e.keyCode == 13) {
+          manageMessage('self', document.getElementById("textToSay").value);
+          sendGPT(document.getElementById("textToSay").value);
+          document.getElementById("textToSay").value = ''
+          return false;
+        }
+      });
+    });
+
+    $(document).ready(function() {
+      $("button#texto").click(function (event) {
+        $("#texto-modal .none").remove();
+
+        var attrBtn = $(this).attr("data-text");
+        var textId = document.getElementById(attrBtn);
+        var copy = $(textId).clone();
+        $("#texto-modal").append(copy);
+        $(".modal-body").animate({ scrollTop: 0 }, 250);
+      });
+
+      $("body").on("click", "button#NaoPepperBTN", function(event) {
+        var textId = document.getElementById('NaoPepper');
+        $("#NaoPepper .none").remove();
+        var copy = $(textId).clone();
+        $("#texto-modal").html(copy);
+        $(".modal-body").animate({ scrollTop: 0 }, 250);
+      });
+
+      $("body").on("click", "button#ROSBasedBTN", function(event) {
+        var textId = document.getElementById('ROSBased');
+        $("#ROSBased .none").remove();
+        var copy = $(textId).clone();
+        $("#texto-modal").html(copy);
+        $(".modal-body").animate({ scrollTop: 0 }, 250);
+      });
+    });
