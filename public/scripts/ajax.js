@@ -31,8 +31,8 @@ function sendWatson(msg) {
 }
 
 function restartRecording() {
-  console.log('restarting recording called.')
    if (recorder && should_be_recording) { 
+    console.log('restarting recording called.')
     recorder.startRecording(); 
   } 
 }
@@ -100,7 +100,8 @@ function getSTTNaoVer(wav) {
       success: (data) => {
         console.log(data);
         if (data != '') {
-          addToChatSelf(data);
+          manageMessage('self', data);
+          sendGPT(data);
         }
       }
   })
@@ -135,8 +136,10 @@ function getSTT(blob) {
       success: (data) => {
         console.log(data);
         if (data != '') {
-          addToChatSelf(data);
+          manageMessage('self', data);
           sendGPT(data);
+        } else {
+          restartRecording();
         }
       }
   })

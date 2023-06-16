@@ -98,7 +98,8 @@ class NaoPepperRobot extends Robot {
     sendImage() {
         this._session.service('ALTabletService').then( tS => {
             var imageUrl = `${window.location.href}uploads/file.jpeg`;
-            tS.showImage(imageUrl);
+            var cacheBuster = `?v=${new Date().getTime()}`
+            tS.showImage(imageUrl + cacheBuster);
         });
     }
 
