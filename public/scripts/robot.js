@@ -95,6 +95,14 @@ class NaoPepperRobot extends Robot {
         this._session = session
     }
 
+    sendImage(image) {
+        console.log(image);
+        this._session.service('ALTabletService').then( tS => {
+            var imageUrl = `${window.location.href}uploads/file.jpeg`;
+            tS.showImage(imageUrl);
+        });
+    }
+
     beginAudioStream(audioModule) {
         document.getElementById('startRecord').classList.add('none');
         document.getElementById('stopRecord').classList.remove('none');
@@ -136,9 +144,6 @@ class NaoPepperRobot extends Robot {
             // Check if the tablet module is available, thus we are running on pepper
             if (tabletService) {
                 console.log('Tablet module is available!');
-                session.service('ALTabletService').then(function (tS) {
-                    tS.showWebview(window.location.href + 'monitor/?ws=' + your_id)
-                });
             } else {
                 console.log('Tablet module is not available!');
             }

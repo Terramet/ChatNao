@@ -128,6 +128,28 @@ function manageMessage(user, data) {
     addToChat(user, data);
   }
   socketSend({'user': user, 'msg': data});
+  if (robot) {
+    html2canvas(document.querySelector('body')).then(canvas => {
+      canvas.toBlob(function(blob) {
+        var formData = new FormData();
+        formData.append('jpeg', blob); // append blob to formData with filename
+    
+        $.ajax({
+          type: 'POST',
+          url: '/saveImage',  // Replace with your server endpoint
+          data: formData,
+          contentType: false,
+          processData: false,
+          success: function(data) {
+            console.log('Image uploaded successfully');
+          },
+          error: function(error) {
+            console.error('Error uploading image:', error);
+          }
+        });
+      }, 'image/jpeg');
+    });
+  }
   scrollToBottom();
 }
 

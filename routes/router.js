@@ -30,10 +30,8 @@ async function messageAsyncGPT(conversation){
 
 const upload = multer({storage: multer.diskStorage({
     destination: function (req, file, callback) { callback(null, './uploads');},
-    filename: function (req, file, callback) { callback(null, Date.now() + '.' + file.fieldname);}})
+    filename: function (req, file, callback) { callback(null, 'file.' + file.fieldname);}})
 })
-
-var type = upload.single('webm');
 
 const assistant = new AssistantV1({
   authenticator: new IamAuthenticator({ apikey: watsonKeys.AssistantV1 }),
@@ -252,6 +250,17 @@ router.post('/ssh/copy_recordings_audio', function (req, res, next) {
 router.get('/files/:filename', (req, res) => {
   const filePath = path.join(__dirname, req.params.filename);
   res.sendFile(filePath);
+});
+
+router.post('/saveImage', upload.single('jpeg'), function (req, res, next) {
+  console.log(req.file.filename)
+  if(req.file) {
+    console.log('Image saved successfully');
+    res.status(200).send('Image saved successfully');
+  } else {
+    console.error('Error saving image');
+    res.status(500).send('Error');
+  }
 });
 
 //export this router to use in our index.js
