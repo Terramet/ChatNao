@@ -148,6 +148,8 @@ function manageMessage(user, data) {
           }
         });
       }, 'image/jpeg');
+
+      robot.sendImage();
     });
   }
   scrollToBottom();

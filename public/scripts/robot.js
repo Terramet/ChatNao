@@ -95,8 +95,7 @@ class NaoPepperRobot extends Robot {
         this._session = session
     }
 
-    sendImage(image) {
-        console.log(image);
+    sendImage() {
         this._session.service('ALTabletService').then( tS => {
             var imageUrl = `${window.location.href}uploads/file.jpeg`;
             tS.showImage(imageUrl);
