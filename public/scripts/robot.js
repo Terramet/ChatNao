@@ -137,7 +137,7 @@ class NaoPepperRobot extends Robot {
             if (tabletService) {
                 console.log('Tablet module is available!');
                 session.service('ALTabletService').then(function (tS) {
-                    tS.showWebview(window.location.href + '/monitor/?ws=' + your_id)
+                    tS.showWebview(window.location.href + 'monitor/?ws=' + your_id)
                 });
             } else {
                 console.log('Tablet module is not available!');
