@@ -166,19 +166,43 @@ class NaoPepperRobot extends Robot {
             });
 
             // Register a touch event handler for the head front touch
-            session.service("ALMemory").then((ALMemory) => {
-                ALMemory.subscriber("FrontTactilTouched").then((subscriber) => {
-                    // subscriber.signal is a signal associated to "FrontTactilTouched"
-                    subscriber.signal.connect((state) => {
-                        if (state === 1.0) {
-                            // Head front touch is detected, start recording audio
-                            this.beginAudioStream(audioModule);
-                        } else {
-                            // Head front touch is released, stop recording audio
-                            this.endAudioStream(audioModule);
-                        }
-                    });
+            // session.service("ALMemory").then((ALMemory) => {
+            //     ALMemory.subscriber("FrontTactilTouched").then((subscriber) => {
+            //         // subscriber.signal is a signal associated to "FrontTactilTouched"
+            //         subscriber.signal.connect((state) => {
+            //             if (state === 1.0) {
+            //                 // Head front touch is detected, start recording audio
+            //                 this.beginAudioStream(audioModule);
+            //             } else {
+            //                 // Head front touch is released, stop recording audio
+            //                 this.endAudioStream(audioModule);
+            //             }
+            //         });
+            //     });
+            // });
+
+            session.service("ALRobotPosture").then(alrp => {
+                alrp.goToPosture('Stand', 1.0);
+            })
+
+            session.service("ALBackgroundMovement").then((bm) => {
+                bm.setEnabled(true);
+                bm.isEnabled().then( a => {
+                    console.log(a);
                 });
+                console.log("ALBackgroundMovement service started");
+            }).catch((error) => {
+                console.error('Error:', error);
+            });
+
+            session.service("ALBasicAwareness").then((ba) => {
+                ba.setEnabled(true);
+                ba.isEnabled().then( a => {
+                    console.log(a);
+                });
+                console.log("ALBasicAwareness service started");
+            }).catch((error) => {
+                console.error('Error:', error);
             });
 
         }, () => {

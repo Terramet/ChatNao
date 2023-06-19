@@ -3,7 +3,7 @@ var recorder;
 var mediaStream;
 var speechEvents = null;
 var stream = null;
-var max_seconds = 1;
+var max_seconds = 1.5;
 var stopped_speaking_timeout;
 var should_be_recording;
 
@@ -49,7 +49,6 @@ function setupRecording() {
 
   // Add an event listener for speech end or silence
   speechEvents.on('stopped_speaking', function() {
-    console.log('Speech ended');
     stopped_speaking_timeout = setTimeout(function() {
         recorder.stopRecording(function() {
             // Get the recorded audio as a Blob
@@ -57,6 +56,8 @@ function setupRecording() {
 
             // Upload or process the recorded audio as needed
             getSTT(blob);              
+            console.log('Speech ended');
+
           });
     }, max_seconds * 1000);
   });
