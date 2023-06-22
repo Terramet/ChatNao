@@ -37,6 +37,11 @@ function setupRecording() {
 
   // Start recording
   recorder.startRecording();
+
+  if (robot) {
+    robot.setEyes(0x00FF00);
+  }
+
   should_be_recording = true;
 
   // Create a speech events instance with hark
