@@ -72,12 +72,35 @@ class NaoPepperRobot extends Robot {
         this._speechDoneCallback = null;
     }
 
-    say(message, callback) {
-        this._speechDoneCallback = callback;  // Store callback for later use
+    async say(message, callback) {
+        // this._speechDoneCallback = callback;  // Store callback for later use
+
+        this.setEyes(0xFF0000);
+
+        try {
+            // Implement speech synthesis for Nao/Pepper robot
+            this._session.service("ALAnimatedSpeech").then(async (tts) => {
+                await tts.say(message);
+                
+                setTimeout(() => {
+                    this.setEyes(0x00FF00);
+                    callback();
+                }, 1 * 1000);
+            });
+        } catch (err) {
+            console.log('Error running say')
+        }
 
         // Implement speech synthesis for Nao/Pepper robot
-        this._session.service("ALAnimatedSpeech").then((tts) => {
-            tts.say(message);
+        // this._session.service("ALAnimatedSpeech").then((tts) => {
+        //     tts.say(message);
+        // });
+        
+    }
+
+    setEyes(colour) {
+        this._session.service("ALLeds").then( (led) => {
+            led.fadeRGB('FaceLeds', colour, 0.1);
         });
     }
 
@@ -152,18 +175,18 @@ class NaoPepperRobot extends Robot {
 
             addToChat("Nao", "Nao has connected");
 
-            this._session.service("ALMemory").then((ALMemory) => {
-                ALMemory.subscriber("ALTextToSpeech/TextDone").then((subscriber) => {
-                    // subscriber.signal is a signal associated to "TextDone"
-                    subscriber.signal.connect((state) => {
-                        if (state && this._speechDoneCallback) {
-                            // When 'TextDone' event is triggered, invoke the callback
-                            this._speechDoneCallback();
-                            this._speechDoneCallback = null;  // Clear the callback after use
-                        }
-                    });
-                });
-            });
+            // this._session.service("ALMemory").then((ALMemory) => {
+            //     ALMemory.subscriber("ALTextToSpeech/TextDone").then((subscriber) => {
+            //         // subscriber.signal is a signal associated to "TextDone"
+            //         subscriber.signal.connect((state) => {
+            //             if (state && this._speechDoneCallback) {
+            //                 // When 'TextDone' event is triggered, invoke the callback
+            //                 this._speechDoneCallback();
+            //                 this._speechDoneCallback = null;  // Clear the callback after use
+            //             }
+            //         });
+            //     });
+            // });
 
             // Register a touch event handler for the head front touch
             // session.service("ALMemory").then((ALMemory) => {

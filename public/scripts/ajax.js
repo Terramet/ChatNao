@@ -1,4 +1,4 @@
-var context = [{"role": "system", "content": "You are a humanoid robot called Pepper. You are not an AI language model"}]
+var context = [{"role": "system", "content": "You are a humanoid robot called Pepper. You are not an AI language model. You should limit your responses to 20 words or less, if you need more words you should prompt the user to ask for more. You are at Dr. Alessandro's inaugural lecture. You are in a building called Cantor at a university called Sheffield Hallam University."}]
 var max_messages = 10;  // change this to adjust the number of messages to keep
 var num_messages = 0;
 
@@ -33,6 +33,7 @@ function sendWatson(msg) {
 function restartRecording() {
    if (recorder && should_be_recording) { 
     console.log('restarting recording called.')
+    document.getElementsByClassName('micinvert')[0].style.backgroundColor = 'green';
     recorder.startRecording(); 
   } 
 }
@@ -128,21 +129,32 @@ function getSTT(blob) {
   let fd = new FormData();
   fd.append('webm', blob);
   $.ajax({
-      type: 'POST',
-      url: 'watson/stt/ws',
-      data: fd,
-      contentType: false,
-      processData: false,
-      success: (data) => {
-        console.log(data);
-        if (data != '') {
-          manageMessage('self', data);
-          sendGPT(data);
-        } else {
-          restartRecording();
+    type: 'POST',
+    url: 'trimAudio',
+    data: fd,
+    contentType: false,
+    processData: false,
+    success: (response) => { 
+      console.log(response.message);
+      $.ajax({
+        type: 'POST',
+        url: 'watson/stt/ws',
+        data: JSON.stringify(response),
+        contentType: 'application/json',
+        processData: false,
+        success: (data) => {
+          console.log(data);
+          if (data != '') {
+            manageMessage('self', data);
+            sendGPT(data);
+          } else {
+            restartRecording();
+          }
         }
-      }
+    })
+    } 
   })
+ 
 }
 
 function importAudio() {
@@ -163,19 +175,19 @@ function importAudio() {
   })
 }
 
-function playFile(filename, callback) {
-  $.ajax({
-    type: 'GET',
-    contentType: 'application/json',
-    url: removeHASH() + 'files/' + filename,
-    success: (data) => {
-      console.log(data);
-      let audio = new Audio(data);
-      audio.addEventListener('ended', function() {
-        console.log('Audio playback finished');
-        callback()
-      });
-      audio.play();
-    }
+async function playFile(filename, callback) {
+  var audio = new Audio(filename);  
+  audio.type = 'audio/wav';
+
+  audio.addEventListener('ended', () => {
+    console.log('Audio playback finished');
+    callback();
   })
+
+  try {
+    await audio.play();
+    console.log('Playing...');
+  } catch (err) {
+    console.log('Failed to play...' + err);
+  }
 }

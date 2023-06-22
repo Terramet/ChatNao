@@ -51,12 +51,22 @@ function setupRecording() {
   speechEvents.on('stopped_speaking', function() {
     stopped_speaking_timeout = setTimeout(function() {
         recorder.stopRecording(function() {
+            document.getElementsByClassName('micinvert')[0].style.backgroundColor = 'red';
+
             // Get the recorded audio as a Blob
             var blob = recorder.getBlob();
 
-            // Upload or process the recorded audio as needed
-            getSTT(blob);              
-            console.log('Speech ended');
+            if (blob.size < 10 * 1024) {
+              // If the size is less than 10KB, start a new recording
+              restartRecording();
+            } else {
+              // Upload or process the recorded audio as needed
+              if (robot) {
+                robot.setEyes(0xFFFF00);
+              }
+              getSTT(blob); 
+              console.log('Speech ended');
+            }             
 
           });
     }, max_seconds * 1000);
@@ -67,6 +77,10 @@ function setupRecording() {
 function stopRecording() {
   document.getElementById('stopRecord').classList.add('none');
   document.getElementById('startRecord').classList.remove('none');
+
+  if (robot) {
+    robot.setEyes(0xFFFFFF);
+  }
 
   if (recorder) {
     // Stop recording
