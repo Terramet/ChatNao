@@ -105,12 +105,12 @@ dist
 
 #Uploads folder
 uploads/*
+!uploads/.gitkeep
 public/tts
 
 server.cert
 server.crt
 server.key
 
-api.key
-watson.json
+api.json
 public/raw_audio/*

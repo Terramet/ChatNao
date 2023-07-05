@@ -122,15 +122,25 @@ function scrollToBottom() {
 }
 
 function manageMessage(user, data) {
+  if (document.getElementById('msgs').scrollHeight > document.getElementById('msgs').clientHeight) {
+    document.getElementById('msgs').innerHTML = '';
+  }
   if (user == 'self') {
     addToChatSelf(data);
   } else {
     addToChat(user, data);
   }
-  socketSend({'user': user, 'msg': data});
+  scrollToBottom();
+  //socketSend({'user': user, 'msg': data});
   if (robot) {
-    html2canvas(document.querySelector('body')).then(canvas => {
-      canvas.toBlob(function(blob) {
+    if (robot.robotType == 'NAO') {
+      updateTablet();
+    }
+  }
+}
+
+function updateTablet() {
+  domtoimage.toBlob(document.getElementById('msgs'),  {height: document.getElementById('msgs').scrollHeight}).then(blob => {
         var formData = new FormData();
         formData.append('jpeg', blob); // append blob to formData with filename
     
@@ -142,17 +152,13 @@ function manageMessage(user, data) {
           processData: false,
           success: function(data) {
             console.log('Image uploaded successfully');
+            robot.sendImage();
           },
           error: function(error) {
             console.error('Error uploading image:', error);
           }
         });
       }, 'image/jpeg');
-
-      robot.sendImage();
-    });
-  }
-  scrollToBottom();
 }
 
 function onError(e) {

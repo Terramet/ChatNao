@@ -10,7 +10,7 @@ const SpeechToText = require('ibm-watson/speech-to-text/v1');
 const {
     IamAuthenticator
 } = require('ibm-watson/auth');
-const watsonKeys = require('../watson.json')
+const apiKeys = require('../api.json')
 const axios = require('axios');
 const socketapi = require('./socketapi')
 const ffmpeg = require('fluent-ffmpeg');
@@ -24,7 +24,7 @@ async function messageAsyncGPT(conversation) {
     var options = {
         method: 'POST',
         headers: {
-            'Authorization': 'Bearer ' + fs.readFileSync('api.key'),
+            'Authorization': 'Bearer ' + apiKeys.OpenAI,
             'content-type': 'application/json'
         },
         data: JSON.stringify(data),
@@ -47,7 +47,7 @@ const upload = multer({
 
 const assistant = new AssistantV1({
     authenticator: new IamAuthenticator({
-        apikey: watsonKeys.AssistantV1
+        apikey: apiKeys.AssistantV1
     }),
     version: '2018-09-20',
     url: 'https://api.eu-gb.assistant.watson.cloud.ibm.com'
@@ -55,14 +55,14 @@ const assistant = new AssistantV1({
 
 const tts = new TextToSpeech({
     authenticator: new IamAuthenticator({
-        apikey: watsonKeys.TextToSpeech
+        apikey: apiKeys.TextToSpeech
     }),
     url: 'https://api.eu-gb.text-to-speech.watson.cloud.ibm.com'
 })
 
 const stt = new SpeechToText({
     authenticator: new IamAuthenticator({
-        apikey: watsonKeys.SpeechToText
+        apikey: apiKeys.SpeechToText
     }),
     url: 'https://api.eu-gb.speech-to-text.watson.cloud.ibm.com',
     headers: {
