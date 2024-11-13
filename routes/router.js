@@ -17,7 +17,7 @@ const ffmpeg = require('fluent-ffmpeg');
 
 async function messageAsyncGPT(conversation) {
     var data = {
-        'model': 'gpt-3.5-turbo-0613',
+        'model': 'gpt-4o-mini',
         'messages': conversation,
     };
 
